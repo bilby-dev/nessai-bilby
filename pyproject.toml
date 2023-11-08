@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools-scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nessai_bilby"
+authors = [
+    {name = "Michael J. Williams", email = "michaeljw1@googlemail.com"},
+]
+description = "Interface and plugin for using nessai in bilby"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "bilby",
+    "nessai",
+    "numpy",
+    "pandas",
+    "scipy",
+]
+
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.setuptools_scm]
+
+[tool.black]
+line-length = 79
+
+[project.entry-points."bilby.samplers"]
+nessai = "nessai_bilby.plugin:Nessai"
+inessai = "nessai_bilby.plugin:ImportanceNessai"
