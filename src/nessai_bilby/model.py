@@ -1,5 +1,4 @@
 """Utilities for using nessai with external packages"""
-import bilby
 from nessai.livepoint import dict_to_live_points
 from nessai.model import Model
 import numpy as np
@@ -26,7 +25,9 @@ class BilbyModel(Model):
         likelihood: "bilby.core.likelihood.Likelihood",
         use_ratio: bool = False,
     ):
-        if not isinstance(priors, bilby.core.prior.PriorDict):
+        from bilby.core.prior import PriorDict
+
+        if not isinstance(priors, PriorDict):
             raise TypeError("priors must be an instance of PriorDict")
 
         self.bilby_priors = priors
