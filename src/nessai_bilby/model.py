@@ -88,15 +88,17 @@ class BilbyModel(Model):
 
     def from_unit_hypercube(self, x):
         """Map samples from the unit hypercube to the prior."""
-        theta = {}
+        theta = x.copy()
         for n in self.names:
             theta[n] = self.bilby_priors[n].rescale(x[n])
-        return dict_to_live_points(theta)
+        return theta
 
     def to_unit_hypercube(self, x):
         """Map samples from the prior to the unit hypercube."""
-        theta = {n: x[n] for n in self.names}
-        return dict_to_live_points(self.bilby_priors.cdf(theta))
+        theta = x.copy()
+        for n in self.names:
+            theta[n] = self.bilby_priors[n].cdf(x[n])
+        return theta
 
 
 class BilbyModelLikelihoodConstraint(BilbyModel):
