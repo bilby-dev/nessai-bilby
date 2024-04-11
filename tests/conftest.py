@@ -22,4 +22,3 @@ def bilby_gaussian_likelihood_and_priors():
         y=bilby.core.prior.Uniform(-10, 10, "y"),
     )
     return likelihood, priors
-
