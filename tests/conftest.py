@@ -1,4 +1,5 @@
 import bilby
+from nessai.livepoint import reset_extra_live_points_parameters
 import numpy as np
 import pytest
 
@@ -22,3 +23,9 @@ def bilby_gaussian_likelihood_and_priors():
         y=bilby.core.prior.Uniform(-10, 10, "y"),
     )
     return likelihood, priors
+
+
+@pytest.fixture(autouse=True)
+def reset_live_point_parameters():
+    # Avoid issues when running standard and ins samplers in the same script.
+    reset_extra_live_points_parameters()
