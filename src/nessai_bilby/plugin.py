@@ -242,7 +242,7 @@ class Nessai(NestedSampler):
 
         if not self.kwargs["output"]:
             self.kwargs["output"] = os.path.join(
-                self.outdir, f"{self.label}_nessai", ""
+                self.outdir, f"{self.label}_{self.sampler_name}", ""
             )
 
         check_directory_exists_and_if_not_mkdir(self.kwargs["output"])
