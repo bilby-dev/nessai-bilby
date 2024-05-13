@@ -36,6 +36,7 @@ class Nessai(NestedSampler):
     _default_kwargs = None
     _run_kwargs_list = None
     _importance_nested_sampler = False
+    sampler_name = "nessai"
     sampling_seed_key = "seed"
 
     @property
@@ -241,7 +242,7 @@ class Nessai(NestedSampler):
 
         if not self.kwargs["output"]:
             self.kwargs["output"] = os.path.join(
-                self.outdir, f"{self.label}_nessai", ""
+                self.outdir, f"{self.label}_{self.sampler_name}", ""
             )
 
         check_directory_exists_and_if_not_mkdir(self.kwargs["output"])
@@ -263,6 +264,31 @@ class Nessai(NestedSampler):
         self._log_interruption(signum=signum)
         sys.exit(self.exit_code)
 
+    @classmethod
+    def get_expected_outputs(cls, outdir=None, label=None):
+        """Get lists of the expected outputs directories and files.
+
+        These are used by :code:`bilby_pipe` when transferring files via HTCondor.
+
+        Parameters
+        ----------
+        outdir : str
+            The output directory.
+        label : str
+            The label for the run.
+
+        Returns
+        -------
+        list
+            List of file names. This will be empty for nessai.
+        list
+            List of directory names.
+        """
+        dirs = [os.path.join(outdir, f"{label}_{cls.sampler_name}", "")]
+        dirs += [os.path.join(dirs[0], d, "") for d in ["proposal", "diagnostics"]]
+        filenames = []
+        return filenames, dirs
+
     def _setup_pool(self):
         pass
 
@@ -278,6 +304,7 @@ class ImportanceNessai(Nessai):
     """
 
     _importance_nested_sampler = True
+    sampler_name = "inessai"
 
     @property
     def external_sampler_name(self):
