@@ -1,4 +1,5 @@
 """Interface for nessai in bilby"""
+
 import os
 import sys
 
@@ -285,7 +286,9 @@ class Nessai(NestedSampler):
             List of directory names.
         """
         dirs = [os.path.join(outdir, f"{label}_{cls.sampler_name}", "")]
-        dirs += [os.path.join(dirs[0], d, "") for d in ["proposal", "diagnostics"]]
+        dirs += [
+            os.path.join(dirs[0], d, "") for d in ["proposal", "diagnostics"]
+        ]
         filenames = []
         return filenames, dirs
 

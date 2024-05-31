@@ -12,7 +12,9 @@ def SamplerClass(request):
 
 
 @pytest.fixture()
-def create_sampler(SamplerClass, bilby_gaussian_likelihood_and_priors, tmp_path):
+def create_sampler(
+    SamplerClass, bilby_gaussian_likelihood_and_priors, tmp_path
+):
     likelihood, priors = bilby_gaussian_likelihood_and_priors
 
     def create_fn(**kwargs):
@@ -22,8 +24,9 @@ def create_sampler(SamplerClass, bilby_gaussian_likelihood_and_priors, tmp_path)
             outdir=tmp_path / "outdir",
             label="test",
             use_ratio=False,
-            **kwargs
+            **kwargs,
         )
+
     return create_fn
 
 

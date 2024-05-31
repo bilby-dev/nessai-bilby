@@ -2,6 +2,7 @@
 
 Includes support for standard nessai and inessai.
 """
+
 from importlib.metadata import PackageNotFoundError, version
 
 try:

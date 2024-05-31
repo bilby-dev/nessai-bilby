@@ -1,4 +1,5 @@
 """Test the integration with bilby"""
+
 import bilby
 import pytest
 
