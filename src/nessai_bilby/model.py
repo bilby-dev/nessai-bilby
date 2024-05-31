@@ -1,4 +1,5 @@
 """Utilities for using nessai with external packages"""
+
 from nessai.livepoint import dict_to_live_points
 from nessai.model import Model
 import numpy as np
