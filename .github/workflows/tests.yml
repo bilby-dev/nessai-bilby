@@ -12,13 +12,19 @@ concurrency:
 
 jobs:
   unittests:
-    name: Unit tests - Python ${{ matrix.python-version }}
+    name: Unit tests - Python ${{ matrix.python-version }} (${{ matrix.os }})
 
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-    runs-on: ubuntu-latest
+        include:
+          - os: windows-latest
+            python-version: 3.11
+          - os: macos-latest
+            python-version: 3.11
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4

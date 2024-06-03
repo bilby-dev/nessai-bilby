@@ -31,6 +31,7 @@ def test_sampling_nessai(
         analytic_priors=True,
         seed=1234,
         nessai_likelihood_constraint=likelihood_constraint,
+        n_pool=None,
     )
 
 
@@ -55,4 +56,5 @@ def test_sampling_inessai(
         injection_parameters={"x": 0.0, "y": 0.0},
         seed=1234,
         nessai_likelihood_constraint=likelihood_constraint,
+        n_pool=None,
     )
