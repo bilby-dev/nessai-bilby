@@ -14,6 +14,8 @@ def test_create_model(ModelClass, bilby_gaussian_likelihood_and_priors):
     likelihood, priors = bilby_gaussian_likelihood_and_priors
     priors = bilby.core.prior.PriorDict(priors)
     model = ModelClass(priors=priors, likelihood=likelihood)
+    # Do this rather than using `set_rng` to ensure backwards compatibility
+    model.rng = np.random.default_rng(1234)
     model.validate_bilby_likelihood()
     model.verify_model()
 
