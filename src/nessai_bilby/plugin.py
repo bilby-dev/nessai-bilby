@@ -3,16 +3,16 @@
 import os
 import sys
 
+from bilby.core.sampler.base_sampler import NestedSampler, signal_wrapper
 from bilby.core.utils import (
     check_directory_exists_and_if_not_mkdir,
     load_json,
     logger,
 )
-from bilby.core.sampler.base_sampler import NestedSampler, signal_wrapper
 from nessai.flowsampler import FlowSampler
 from nessai.livepoint import live_points_to_array
 from nessai.posterior import compute_weights
-from nessai.utils.settings import get_run_kwargs_list, get_all_kwargs
+from nessai.utils.settings import get_all_kwargs, get_run_kwargs_list
 
 try:
     from nessai.utils.logging import configure_logger

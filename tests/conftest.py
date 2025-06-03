@@ -1,7 +1,7 @@
 import bilby
-from nessai.livepoint import reset_extra_live_points_parameters
 import numpy as np
 import pytest
+from nessai.livepoint import reset_extra_live_points_parameters
 
 
 @pytest.fixture

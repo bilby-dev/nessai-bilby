@@ -1,9 +1,11 @@
-import bilby
 import copy
-from nessai_bilby.plugin import Nessai, ImportanceNessai
 import os
-import pytest
 from unittest.mock import mock_open, patch
+
+import bilby
+import pytest
+
+from nessai_bilby.plugin import ImportanceNessai, Nessai
 
 
 @pytest.fixture(params=[Nessai, ImportanceNessai])

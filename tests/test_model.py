@@ -1,8 +1,9 @@
 import bilby
-from nessai.flowsampler import FlowSampler
-from nessai_bilby.model import BilbyModel, BilbyModelLikelihoodConstraint
 import numpy as np
 import pytest
+from nessai.flowsampler import FlowSampler
+
+from nessai_bilby.model import BilbyModel, BilbyModelLikelihoodConstraint
 
 
 @pytest.fixture(params=[BilbyModel, BilbyModelLikelihoodConstraint])
