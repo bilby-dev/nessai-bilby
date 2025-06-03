@@ -21,7 +21,9 @@ def test_create_model(ModelClass, bilby_gaussian_likelihood_and_priors, rng):
 
 
 def test_sample_model_with_nessai(
-    bilby_gaussian_likelihood_and_priors, tmp_path, ModelClass,
+    bilby_gaussian_likelihood_and_priors,
+    tmp_path,
+    ModelClass,
 ):
     likelihood, priors = bilby_gaussian_likelihood_and_priors
     priors = bilby.core.prior.PriorDict(priors)
