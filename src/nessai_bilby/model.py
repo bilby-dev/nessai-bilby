@@ -28,8 +28,8 @@ class BilbyModel(Model):
     def __init__(
         self,
         *,
-        priors: PriorDict,
-        likelihood: Likelihood,
+        priors: "PriorDict",
+        likelihood: "Likelihood",
         use_ratio: bool = False,
     ):
         from bilby.core.prior import PriorDict
