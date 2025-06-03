@@ -1,8 +1,14 @@
 """Utilities for using nessai with external packages"""
 
+from typing import TYPE_CHECKING
+
+import numpy as np
 from nessai.livepoint import dict_to_live_points
 from nessai.model import Model
-import numpy as np
+
+if TYPE_CHECKING:
+    from bilby.core.likelihood import Likelihood
+    from bilby.core.prior import PriorDict
 
 
 class BilbyModel(Model):
@@ -22,8 +28,8 @@ class BilbyModel(Model):
     def __init__(
         self,
         *,
-        priors: "bilby.core.prior.PriorDict",
-        likelihood: "bilby.core.likelihood.Likelihood",
+        priors: PriorDict,
+        likelihood: Likelihood,
         use_ratio: bool = False,
     ):
         from bilby.core.prior import PriorDict
