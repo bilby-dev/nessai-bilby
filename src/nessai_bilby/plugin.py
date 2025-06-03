@@ -13,6 +13,7 @@ from nessai.flowsampler import FlowSampler
 from nessai.livepoint import live_points_to_array
 from nessai.posterior import compute_weights
 from nessai.utils.settings import get_run_kwargs_list, get_all_kwargs
+
 try:
     from nessai.utils.logging import configure_logger
 except ImportError:
