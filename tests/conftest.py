@@ -29,3 +29,8 @@ def bilby_gaussian_likelihood_and_priors():
 def reset_live_point_parameters():
     # Avoid issues when running standard and ins samplers in the same script.
     reset_extra_live_points_parameters()
+
+
+@pytest.fixture()
+def rng():
+    return np.random.default_rng()
