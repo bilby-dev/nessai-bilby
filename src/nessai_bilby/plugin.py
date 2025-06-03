@@ -13,7 +13,10 @@ from nessai.flowsampler import FlowSampler
 from nessai.livepoint import live_points_to_array
 from nessai.posterior import compute_weights
 from nessai.utils.settings import get_run_kwargs_list, get_all_kwargs
-from nessai.utils.logging import setup_logger
+try:
+    from nessai.utils.logging import configure_logger
+except ImportError:
+    from nessai.utils.logging import setup_logger as configure_logger
 import numpy as np
 from pandas import DataFrame
 from scipy.special import logsumexp
@@ -182,7 +185,7 @@ class Nessai(NestedSampler):
             nessai_log_level = logger.getEffectiveLevel()
         nessai_logging_stream = kwargs.pop("nessai_logging_stream")
 
-        setup_logger(
+        configure_logger(
             self.outdir,
             label=self.label,
             log_level=nessai_log_level,
