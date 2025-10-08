@@ -208,6 +208,13 @@ class Nessai(NestedSampler):
             use_ratio=self.use_ratio,
         )
 
+        n_pool = kwargs.pop("n_pool", None)
+        if n_pool == 1:
+            logger.debug(
+                "n_pool=1, overriding n_pool to None to disable multiprocessing"
+            )
+            n_pool = None
+
         # Configure the sampler
         self.fs = FlowSampler(
             model,
