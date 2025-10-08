@@ -33,6 +33,8 @@ def test_sampling_nessai(
         nessai_likelihood_constraint=likelihood_constraint,
         n_pool=None,
     )
+    # Assert plots are made
+    assert list(outdir.glob("*_nessai/*.png"))
 
 
 def test_sampling_inessai(
@@ -58,3 +60,30 @@ def test_sampling_inessai(
         nessai_likelihood_constraint=likelihood_constraint,
         n_pool=None,
     )
+
+
+def test_sampling_nessai_plot(
+    bilby_gaussian_likelihood_and_priors,
+    tmp_path,
+):
+    likelihood, priors = bilby_gaussian_likelihood_and_priors
+
+    outdir = tmp_path / "test_sampling_nessai_plot"
+
+    bilby.run_sampler(
+        outdir=outdir,
+        resume=False,
+        plot=True,
+        likelihood=likelihood,
+        priors=priors,
+        nlive=100,
+        stopping=5.0,
+        sampler="nessai",
+        injection_parameters={"x": 0.0, "y": 0.0},
+        analytic_priors=True,
+        seed=1234,
+        nessai_likelihood_constraint=False,
+        nessai_plot=False,
+    )
+    # Assert no png files in the output directory
+    assert not list(outdir.glob("*_nessai/*.png"))
