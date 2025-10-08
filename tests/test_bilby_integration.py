@@ -84,7 +84,7 @@ def test_sampling_nessai_plot(
         seed=1234,
         nessai_likelihood_constraint=False,
         nessai_plot=False,
-        pool=None,
+        n_pool=None,
     )
     # Assert no png files in the output directory
     assert not list(outdir.glob("*_nessai/*.png"))
