@@ -220,6 +220,7 @@ class Nessai(NestedSampler):
             model,
             signal_handling=False,  # Disable signal handling so it can be handled by bilby
             importance_nested_sampler=self._importance_nested_sampler,
+            n_pool=n_pool,
             **kwargs,
         )
         # Run the sampler
