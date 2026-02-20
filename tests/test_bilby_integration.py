@@ -6,6 +6,8 @@ import signal
 import bilby
 import pytest
 
+from nessai_bilby.model import BilbyModel
+
 
 @pytest.fixture(params=[False, True])
 def likelihood_constraint(request):
@@ -70,6 +72,40 @@ def test_sampling_nessai(
     )
 
     assert list(outdir.glob("*_nessai/*.png"))
+
+
+def test_ensure_pool_is_used(
+    bilby_likelihood, bilby_priors, tmp_path, caplog, monkeypatch
+):
+    # Patch the ModelClass to check if the pool is used
+    from nessai_bilby import plugin
+
+    class TestModel(BilbyModel):
+        pool_used = False
+
+        def batch_evaluate_log_likelihood(self, parameters):
+            if self.pool is not None:
+                TestModel.pool_used = True
+            else:
+                assert False, "Pool was not set in the model"
+            return super().batch_evaluate_log_likelihood(parameters)
+
+    monkeypatch.setattr(plugin, "BilbyModel", TestModel)
+
+    with caplog.at_level("DEBUG", logger="nessai"):
+        run_sampler(
+            bilby_likelihood,
+            bilby_priors,
+            tmp_path / "test_pool_is_used",
+            None,
+            "nessai",
+            n_pool=2,
+            condition=10,
+            nlive=100,
+            nessai_likelihood_constraint=False,
+        )
+    assert "Using user specified pool" in caplog.text
+    assert TestModel.pool_used, "Pool was not used during sampling"
 
 
 def test_sampling_inessai(
