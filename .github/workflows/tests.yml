@@ -43,8 +43,8 @@ jobs:
         echo "MPLBACKEND=agg" >> $env:GITHUB_ENV
     - name: Test with pytest
       run: |
-        python -m pytest
-    - name: Test with bilby <2.7
+        BILBY_ALLOW_PARAMETERS_AS_STATE python -m pytest
+    - name: Test with bilby<2.7
       run: |
         pip install "bilby<2.7"
         python -m pytest
