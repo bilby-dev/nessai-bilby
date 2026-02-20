@@ -1,8 +1,7 @@
 """Test the integration with bilby"""
 
+import os
 import signal
-import threading
-import time
 
 import bilby
 import pytest
@@ -123,57 +122,41 @@ def test_sampling_nessai_plot(
 
 
 def test_interrupt_sampler(
-    bilby_gaussian_likelihood_and_priors,
-    outdir,
+    bilby_likelihood,
+    bilby_priors,
     conversion_function,
-    sampler,
     n_pool,
+    tmp_path,
 ):
-    likelihood, priors = bilby_gaussian_likelihood_and_priors
+    outdir = tmp_path / "test_interrupt_sampler"
+    interrupted = False
 
-    started = threading.Event()
-    calls = 0
-
-    def trigger_signal():
-        if started.wait(timeout=10):
-            signal.raise_signal(signal.SIGINT)
-        else:
-            # if we never started, don't hang the test forever
-            pytest.fail("Sampler never began likelihood evaluations")
-
-    thread = threading.Thread(target=trigger_signal, daemon=True)
-    thread.start()
-
-    original_log_likelihood = likelihood.log_likelihood
-
-    def slow_log_likelihood(parameters=None):
-        nonlocal calls
-        calls += 1
-        # Bilby tests the likelihood before starting sampling
-        if calls > 250:
-            started.set()
-        time.sleep(0.01)
-        return original_log_likelihood(parameters)
-
-    likelihood.log_likelihood = slow_log_likelihood
+    def interrupt_once(_sampler):
+        nonlocal interrupted
+        if not interrupted:
+            interrupted = True
+            os.kill(os.getpid(), signal.SIGINT)
 
     label = "test_interrupt"
 
     with pytest.raises((SystemExit, KeyboardInterrupt)) as exc:
         run_sampler(
-            likelihood,
-            priors,
+            bilby_likelihood,
+            bilby_priors,
             outdir,
             conversion_function,
-            sampler,
+            "nessai",
             exit_code=5,
             resume=True,
             label=label,
             n_pool=n_pool,
             nlive=100,
+            checkpoint_on_iteration=True,
+            checkpoint_interval=1,
+            checkpoint_callback=interrupt_once,
         )
 
     if isinstance(exc.value, SystemExit):
         assert exc.value.code == 5
 
-    assert (outdir / f"{label}_checkpoint_resume.pickle").exists()
+    assert outdir.glob(f"{label}_nessai/*.pkl")
