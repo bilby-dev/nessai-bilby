@@ -18,7 +18,7 @@ def conversion_function():
     def _conversion_function(parameters, likelihood, prior):
         converted = parameters.copy()
         if "derived" not in converted:
-            converted["derived"] = converted["x"] * converted["y"]
+            converted["derived"] = converted["m"] * converted["c"]
         return converted
 
     return _conversion_function
