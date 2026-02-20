@@ -42,6 +42,7 @@ class BilbyModel(Model):
         self.use_ratio = use_ratio
         self.names = self.bilby_priors.non_fixed_keys
         self._update_bounds()
+        self.fixed_parameters = self._fixed_parameters_dict(self.bilby_priors)
 
         if self.use_ratio:
             self.bilby_log_likelihood_fn = (
@@ -52,6 +53,14 @@ class BilbyModel(Model):
 
         self.validate_bilby_likelihood()
 
+    @staticmethod
+    def _fixed_parameters_dict(bilby_priors: "PriorDict") -> dict:
+        """Dictionary of fixed parameters."""
+        theta = {}
+        for key in bilby_priors.fixed_keys:
+            theta[key] = bilby_priors[key].value
+        return theta
+
     def _update_bounds(self):
         self.bounds = {
             key: [
@@ -61,17 +70,27 @@ class BilbyModel(Model):
             for key in self.names
         }
 
+    def _try_bilby_likelihood(self, theta):
+        """Try to evaluate the bilby likelihood with the given parameters."""
+        try:
+            return self.bilby_log_likelihood_fn(theta)
+        except TypeError:
+            self.bilby_likelihood.parameters.update(theta)
+            return self.bilby_log_likelihood_fn()
+
     def validate_bilby_likelihood(self) -> None:
         """Validate the bilby likelihood object"""
-        theta = self.bilby_priors.sample()
-        self.bilby_likelihood.parameters.update(theta)
-        self.bilby_log_likelihood_fn()
+        theta = self.fixed_parameters.copy()
+        theta_new = self.bilby_priors.sample()
+        theta.update(theta_new)
+        return self._try_bilby_likelihood(theta)
 
     def log_likelihood(self, x):
         """Compute the log likelihood"""
-        theta = {n: x[n].item() for n in self.names}
-        self.bilby_likelihood.parameters.update(theta)
-        return self.bilby_log_likelihood_fn()
+        theta = self.fixed_parameters.copy()
+        for n in self.names:
+            theta[n] = x[n].item()
+        return self._try_bilby_likelihood(theta)
 
     def log_prior(self, x):
         """Compute the log prior.
@@ -79,9 +98,7 @@ class BilbyModel(Model):
         Also evaluates the likelihood constraints.
         """
         theta = {n: x[n] for n in self.names}
-        return self.bilby_priors.ln_prob(theta, axis=0) + np.log(
-            self.bilby_priors.evaluate_constraints(theta)
-        )
+        return self.bilby_priors.ln_prob(theta, axis=0)
 
     def new_point(self, N=1):
         """Draw a point from the prior"""
@@ -116,11 +133,12 @@ class BilbyModelLikelihoodConstraint(BilbyModel):
 
         Also evaluates the likelihood constraints.
         """
-        theta = {n: x[n].item() for n in self.names}
+        theta = self.fixed_parameters.copy()
+        for n in self.names:
+            theta[n] = x[n].item()
         if not self.bilby_priors.evaluate_constraints(theta):
             return -np.inf
-        self.bilby_likelihood.parameters.update(theta)
-        return self.bilby_log_likelihood_fn()
+        return self._try_bilby_likelihood(theta)
 
     def log_prior(self, x):
         """Compute the log prior."""

@@ -214,6 +214,20 @@ class Nessai(NestedSampler):
                 "n_pool=1, overriding n_pool to None to disable multiprocessing"
             )
             n_pool = None
+            self._npool = None
+
+        if n_pool is not None:
+            logger.info(
+                f"Using bilby pool for multiprocessing with n_pool={n_pool}"
+            )
+            self._setup_pool(model)
+        else:
+            # bilby doesn't define pool by default
+            self.pool = None
+
+        # Remove pool if it exists since it will have been used in `_setup_pool`
+        # we instead pass the pool to the FlowSampler directly.
+        kwargs.pop("pool", None)
 
         # Configure the sampler
         self.fs = FlowSampler(
@@ -221,10 +235,14 @@ class Nessai(NestedSampler):
             signal_handling=False,  # Disable signal handling so it can be handled by bilby
             importance_nested_sampler=self._importance_nested_sampler,
             n_pool=n_pool,
+            pool=self.pool,
+            close_pool=False,  # Don't close the pool since it is managed by bilby
             **kwargs,
         )
         # Run the sampler
         self.fs.run(**run_kwargs)
+
+        self._close_pool()
 
         # Update the result
         self.update_result()
@@ -306,8 +324,13 @@ class Nessai(NestedSampler):
         filenames = []
         return filenames, dirs
 
-    def _setup_pool(self):
-        pass
+    def _setup_pool(self, model):
+        from nessai.utils.multiprocessing import (
+            initialise_pool_variables,
+        )
+
+        initialise_pool_variables(model)
+        super()._setup_pool()
 
 
 class ImportanceNessai(Nessai):
