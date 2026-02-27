@@ -5,7 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nessai-bilby"
 authors = [
-    {name = "Michael J. Williams", email = "michaeljw1@googlemail.com"},
+    {name = "Bilby Developers"},
+]
+maintainers = [
+    {name = "Colm Talbot", email = "colm.talbot@ligo.org"},
+    {name = "Michael J. Williams", email = "michael.williams@ligo.org"},
 ]
 description = "Interface and plugin for using nessai in bilby"
 readme = "README.md"
