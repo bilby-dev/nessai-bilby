@@ -41,13 +41,22 @@ def _initialize_global_variables(
         initialise_pool_variables,
     )
 
-    base_initialize_global_variables(
-        likelihood=likelihood,
-        priors=priors,
-        search_parameter_keys=search_parameter_keys,
-        use_ratio=use_ratio,
-        parameters=parameters,
-    )
+    # Older versions of bilby don't have a parameters argument
+    try:
+        base_initialize_global_variables(
+            likelihood=likelihood,
+            priors=priors,
+            search_parameter_keys=search_parameter_keys,
+            use_ratio=use_ratio,
+            parameters=parameters,
+        )
+    except TypeError:
+        base_initialize_global_variables(
+            likelihood=likelihood,
+            priors=priors,
+            search_parameter_keys=search_parameter_keys,
+            use_ratio=use_ratio,
+        )
     initialise_pool_variables(nessai_model)
 
 
@@ -352,6 +361,11 @@ class Nessai(NestedSampler):
 
     def _setup_pool(self, nessai_model):
         # TODO: this should be updated once https://github.com/bilby-dev/bilby/pull/1009 is in a release
+
+        # In bilby<2.7 samplers don't have parameters and the global variable
+        # function doesn't need it.
+        parameters = getattr(self, "parameters", None)
+
         if self.kwargs.get("pool", None) is not None:
             logger.info("Using user defined pool.")
             self.pool = self.kwargs["pool"]
@@ -369,7 +383,7 @@ class Nessai(NestedSampler):
                     self.priors,
                     self._search_parameter_keys,
                     self.use_ratio,
-                    deepcopy(self.parameters),
+                    deepcopy(parameters),
                     nessai_model,
                 ),
             )
@@ -380,7 +394,7 @@ class Nessai(NestedSampler):
             priors=self.priors,
             search_parameter_keys=self._search_parameter_keys,
             use_ratio=self.use_ratio,
-            parameters=deepcopy(self.parameters),
+            parameters=deepcopy(parameters),
             nessai_model=nessai_model,
         )
         self.kwargs["pool"] = self.pool
