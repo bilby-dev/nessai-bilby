@@ -74,23 +74,26 @@ def test_sampling_nessai(
     assert list(outdir.glob("*_nessai/*.png"))
 
 
+class PoolTestModel(BilbyModel):
+    pool_used = False
+
+    def batch_evaluate_log_likelihood(self, parameters):
+        if self.pool is not None:
+            PoolTestModel.pool_used = True
+        else:
+            assert False, "Pool was not set in the model"
+        return super().batch_evaluate_log_likelihood(parameters)
+
+
 def test_ensure_pool_is_used(
     bilby_likelihood, bilby_priors, tmp_path, caplog, monkeypatch
 ):
     # Patch the ModelClass to check if the pool is used
     from nessai_bilby import plugin
 
-    class TestModel(BilbyModel):
-        pool_used = False
+    PoolTestModel.pool_used = False
 
-        def batch_evaluate_log_likelihood(self, parameters):
-            if self.pool is not None:
-                TestModel.pool_used = True
-            else:
-                assert False, "Pool was not set in the model"
-            return super().batch_evaluate_log_likelihood(parameters)
-
-    monkeypatch.setattr(plugin, "BilbyModel", TestModel)
+    monkeypatch.setattr(plugin, "BilbyModel", PoolTestModel)
 
     with caplog.at_level("DEBUG", logger="nessai"):
         run_sampler(
@@ -105,7 +108,8 @@ def test_ensure_pool_is_used(
             nessai_likelihood_constraint=False,
         )
     assert "Using user specified pool" in caplog.text
-    assert TestModel.pool_used, "Pool was not used during sampling"
+    assert PoolTestModel.pool_used, "Pool was not used during sampling"
+    PoolTestModel.pool_used = False
 
 
 def test_sampling_inessai(
