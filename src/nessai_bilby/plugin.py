@@ -69,7 +69,7 @@ class Nessai(NestedSampler):
 
         - :code:`nessai_log_level`: allows setting the logging level in nessai
         - :code:`nessai_logging_stream`: allows setting the logging stream
-        - :code:`nessai_plot`: allows toggling the plotting in FlowSampler and FlowSampler.run
+        - :code:`nessai_plot`: allows toggling the plotting in FlowSampler and FlowSampler.run. Note the bilby :code:`plot` kwargs overrides this if :code:`False`.
         - :code:`nessai_likelihood_constraint`: allows toggling between
           including the prior constraints in likelihood or the prior.
         """
