@@ -2,6 +2,7 @@
 
 import os
 import sys
+from copy import deepcopy
 
 from bilby.core.sampler.base_sampler import NestedSampler, signal_wrapper
 from bilby.core.utils import (
@@ -23,6 +24,31 @@ from pandas import DataFrame
 from scipy.special import logsumexp
 
 from .model import BilbyModel, BilbyModelLikelihoodConstraint
+
+
+def _initialize_global_variables(
+    likelihood,
+    priors,
+    search_parameter_keys,
+    use_ratio,
+    parameters,
+    nessai_model,
+):
+    from bilby.core.sampler.base_sampler import (
+        _initialize_global_variables as base_initialize_global_variables,
+    )
+    from nessai.utils.multiprocessing import (
+        initialise_pool_variables,
+    )
+
+    base_initialize_global_variables(
+        likelihood=likelihood,
+        priors=priors,
+        search_parameter_keys=search_parameter_keys,
+        use_ratio=use_ratio,
+        parameters=parameters,
+    )
+    initialise_pool_variables(nessai_model)
 
 
 class Nessai(NestedSampler):
@@ -324,13 +350,40 @@ class Nessai(NestedSampler):
         filenames = []
         return filenames, dirs
 
-    def _setup_pool(self, model):
-        from nessai.utils.multiprocessing import (
-            initialise_pool_variables,
-        )
+    def _setup_pool(self, nessai_model):
+        # TODO: this should be updated once https://github.com/bilby-dev/bilby/pull/1009 is in a release
+        if self.kwargs.get("pool", None) is not None:
+            logger.info("Using user defined pool.")
+            self.pool = self.kwargs["pool"]
+        elif self.npool is not None and self.npool > 1:
+            logger.info(
+                f"Setting up multiproccesing pool with {self.npool} processes"
+            )
+            import multiprocessing
 
-        initialise_pool_variables(model)
-        super()._setup_pool()
+            self.pool = multiprocessing.Pool(
+                processes=self.npool,
+                initializer=_initialize_global_variables,
+                initargs=(
+                    self.likelihood,
+                    self.priors,
+                    self._search_parameter_keys,
+                    self.use_ratio,
+                    deepcopy(self.parameters),
+                    nessai_model,
+                ),
+            )
+        else:
+            self.pool = None
+        _initialize_global_variables(
+            likelihood=self.likelihood,
+            priors=self.priors,
+            search_parameter_keys=self._search_parameter_keys,
+            use_ratio=self.use_ratio,
+            parameters=deepcopy(self.parameters),
+            nessai_model=nessai_model,
+        )
+        self.kwargs["pool"] = self.pool
 
 
 class ImportanceNessai(Nessai):
