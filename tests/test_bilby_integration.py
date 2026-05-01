@@ -2,6 +2,7 @@
 
 import os
 import signal
+import sys
 
 import bilby
 import pytest
@@ -161,6 +162,10 @@ def test_sampling_nessai_plot(
     assert not list(outdir.glob("*_nessai/*.png"))
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Signal handling does not work on Windows",
+)
 def test_interrupt_sampler(
     bilby_likelihood,
     bilby_priors,
