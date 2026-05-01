@@ -2,6 +2,7 @@
 
 import os
 import sys
+from copy import deepcopy
 
 from bilby.core.sampler.base_sampler import NestedSampler, signal_wrapper
 from bilby.core.utils import (
@@ -23,6 +24,40 @@ from pandas import DataFrame
 from scipy.special import logsumexp
 
 from .model import BilbyModel, BilbyModelLikelihoodConstraint
+
+
+def _initialize_global_variables(
+    likelihood,
+    priors,
+    search_parameter_keys,
+    use_ratio,
+    parameters,
+    nessai_model,
+):
+    from bilby.core.sampler.base_sampler import (
+        _initialize_global_variables as base_initialize_global_variables,
+    )
+    from nessai.utils.multiprocessing import (
+        initialise_pool_variables,
+    )
+
+    # Older versions of bilby don't have a parameters argument
+    try:
+        base_initialize_global_variables(
+            likelihood=likelihood,
+            priors=priors,
+            search_parameter_keys=search_parameter_keys,
+            use_ratio=use_ratio,
+            parameters=parameters,
+        )
+    except TypeError:
+        base_initialize_global_variables(
+            likelihood=likelihood,
+            priors=priors,
+            search_parameter_keys=search_parameter_keys,
+            use_ratio=use_ratio,
+        )
+    initialise_pool_variables(nessai_model)
 
 
 class Nessai(NestedSampler):
@@ -69,7 +104,7 @@ class Nessai(NestedSampler):
 
         - :code:`nessai_log_level`: allows setting the logging level in nessai
         - :code:`nessai_logging_stream`: allows setting the logging stream
-        - :code:`nessai_plot`: allows toggling the plotting in FlowSampler and FlowSampler.run
+        - :code:`nessai_plot`: allows toggling the plotting in FlowSampler and FlowSampler.run. Note the bilby :code:`plot` kwargs overrides this if :code:`False`.
         - :code:`nessai_likelihood_constraint`: allows toggling between
           including the prior constraints in likelihood or the prior.
         """
@@ -214,6 +249,20 @@ class Nessai(NestedSampler):
                 "n_pool=1, overriding n_pool to None to disable multiprocessing"
             )
             n_pool = None
+            self._npool = None
+
+        if n_pool is not None:
+            logger.info(
+                f"Using bilby pool for multiprocessing with n_pool={n_pool}"
+            )
+            self._setup_pool(model)
+        else:
+            # bilby doesn't define pool by default
+            self.pool = None
+
+        # Remove pool if it exists since it will have been used in `_setup_pool`
+        # we instead pass the pool to the FlowSampler directly.
+        kwargs.pop("pool", None)
 
         # Configure the sampler
         self.fs = FlowSampler(
@@ -221,10 +270,14 @@ class Nessai(NestedSampler):
             signal_handling=False,  # Disable signal handling so it can be handled by bilby
             importance_nested_sampler=self._importance_nested_sampler,
             n_pool=n_pool,
+            pool=self.pool,
+            close_pool=False,  # Don't close the pool since it is managed by bilby
             **kwargs,
         )
         # Run the sampler
         self.fs.run(**run_kwargs)
+
+        self._close_pool()
 
         # Update the result
         self.update_result()
@@ -306,8 +359,45 @@ class Nessai(NestedSampler):
         filenames = []
         return filenames, dirs
 
-    def _setup_pool(self):
-        pass
+    def _setup_pool(self, nessai_model):
+        # TODO: this should be updated once https://github.com/bilby-dev/bilby/pull/1009 is in a release
+
+        # In bilby<2.7 samplers don't have parameters and the global variable
+        # function doesn't need it.
+        parameters = getattr(self, "parameters", None)
+
+        if self.kwargs.get("pool", None) is not None:
+            logger.info("Using user defined pool.")
+            self.pool = self.kwargs["pool"]
+        elif self.npool is not None and self.npool > 1:
+            logger.info(
+                f"Setting up multiproccesing pool with {self.npool} processes"
+            )
+            import multiprocessing
+
+            self.pool = multiprocessing.Pool(
+                processes=self.npool,
+                initializer=_initialize_global_variables,
+                initargs=(
+                    self.likelihood,
+                    self.priors,
+                    self._search_parameter_keys,
+                    self.use_ratio,
+                    deepcopy(parameters),
+                    nessai_model,
+                ),
+            )
+        else:
+            self.pool = None
+        _initialize_global_variables(
+            likelihood=self.likelihood,
+            priors=self.priors,
+            search_parameter_keys=self._search_parameter_keys,
+            use_ratio=self.use_ratio,
+            parameters=deepcopy(parameters),
+            nessai_model=nessai_model,
+        )
+        self.kwargs["pool"] = self.pool
 
 
 class ImportanceNessai(Nessai):

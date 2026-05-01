@@ -4,26 +4,33 @@ import pytest
 from nessai.livepoint import reset_extra_live_points_parameters
 
 
-class GaussianLikelihood(bilby.Likelihood):
-    def __init__(self):
-        """A very simple Gaussian likelihood"""
-        super().__init__(parameters={"x": None, "y": None})
-
-    def log_likelihood(self):
-        """Log-likelihood."""
-        return -0.5 * (
-            self.parameters["x"] ** 2.0 + self.parameters["y"] ** 2.0
-        ) - np.log(2.0 * np.pi)
+def model(x, m, c):
+    return m * x + c
 
 
-@pytest.fixture
-def bilby_gaussian_likelihood_and_priors():
-    likelihood = GaussianLikelihood()
-    priors = dict(
-        x=bilby.core.prior.Uniform(-10, 10, "x"),
-        y=bilby.core.prior.Uniform(-10, 10, "y"),
-    )
-    return likelihood, priors
+def conversion_func(parameters):
+    # d = |m| + |c|
+    parameters["d"] = abs(parameters["m"]) + abs(parameters["c"])
+    return parameters
+
+
+@pytest.fixture()
+def bilby_likelihood(rng):
+    x = np.linspace(0, 10, 100)
+    injection_parameters = dict(m=0.5, c=0.2)
+    sigma = 1.0
+    y = model(x, **injection_parameters) + rng.normal(0.0, sigma, len(x))
+    likelihood = bilby.likelihood.GaussianLikelihood(x, y, model, sigma)
+    return likelihood
+
+
+@pytest.fixture()
+def bilby_priors():
+    priors = bilby.core.prior.PriorDict(conversion_function=conversion_func)
+    priors["m"] = bilby.core.prior.Uniform(0, 5, boundary="periodic")
+    priors["c"] = bilby.core.prior.Uniform(-2, 2, boundary="reflective")
+    priors["d"] = bilby.core.prior.Constraint(name="d", minimum=0, maximum=5)
+    return priors
 
 
 @pytest.fixture(autouse=True)
