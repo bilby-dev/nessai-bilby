@@ -1,7 +1,9 @@
 """Utilities for using nessai with external packages"""
 
+from numbers import Number
 from typing import TYPE_CHECKING
 
+import bilby
 import numpy as np
 from nessai.livepoint import dict_to_live_points
 from nessai.model import Model
@@ -57,8 +59,13 @@ class BilbyModel(Model):
     def _fixed_parameters_dict(bilby_priors: "PriorDict") -> dict:
         """Dictionary of fixed parameters."""
         theta = {}
-        for key in bilby_priors.fixed_keys:
-            theta[key] = bilby_priors[key].value
+        for key in bilby_priors.keys():
+            if isinstance(bilby_priors[key], Number):
+                theta[key] = bilby_priors[key]
+            elif bilby_priors[key].is_fixed and isinstance(
+                bilby_priors[key], bilby.core.prior.DeltaFunction
+            ):
+                theta[key] = bilby_priors[key].sample()
         return theta
 
     def _update_bounds(self):
