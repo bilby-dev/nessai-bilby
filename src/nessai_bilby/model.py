@@ -3,6 +3,7 @@
 from numbers import Number
 from typing import TYPE_CHECKING
 
+import bilby
 import numpy as np
 from nessai.livepoint import dict_to_live_points
 from nessai.model import Model
@@ -61,7 +62,9 @@ class BilbyModel(Model):
         for key in bilby_priors.keys():
             if isinstance(bilby_priors[key], Number):
                 theta[key] = bilby_priors[key]
-            elif bilby_priors[key].is_fixed:
+            elif bilby_priors[key].is_fixed and isinstance(
+                bilby_priors[key], bilby.core.prior.DeltaFunction
+            ):
                 theta[key] = bilby_priors[key].sample()
         return theta
 
