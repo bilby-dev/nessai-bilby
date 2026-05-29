@@ -39,3 +39,16 @@ def test_sample_model_with_nessai(
 
     samples = fs.posterior_samples
     assert not np.isnan([samples[n] for n in samples.dtype.names]).any()
+
+
+@pytest.mark.parametrize("z", [1.0, bilby.core.prior.DeltaFunction(1.0)])
+def test_model_fixed_keys(bilby_likelihood, z):
+    from bilby.core.prior import PriorDict
+
+    priors = PriorDict()
+    priors["m"] = bilby.core.prior.Uniform(0, 1)
+    priors["c"] = bilby.core.prior.Uniform(0, 1)
+    priors["z"] = z
+
+    model = BilbyModel(priors=priors, likelihood=bilby_likelihood)
+    assert model.fixed_parameters == {"z": 1.0}
