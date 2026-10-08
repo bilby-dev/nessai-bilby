@@ -34,9 +34,14 @@ def _initialize_global_variables(
     parameters,
     nessai_model,
 ):
-    from bilby.core.sampler.base_sampler import (
-        _initialize_global_variables as base_initialize_global_variables,
-    )
+    try:
+        from bilby.core.utils.parallel import (
+            initialize_global_variables as base_initialize_global_variables,
+        )
+    except ImportError:
+        from bilby.core.sampler.base_sampler import (
+            _initialize_global_variables as base_initialize_global_variables,
+        )
     from nessai.utils.multiprocessing import (
         initialise_pool_variables,
     )
